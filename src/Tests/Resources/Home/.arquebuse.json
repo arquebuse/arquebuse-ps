@@ -1,0 +1,6 @@
+{
+	"DefaultServer": {
+		"BaseUrl": "another-fake-url",
+		"APIKey":  "another-fake-api-key"
+	}
+}

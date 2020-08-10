@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Types>
+  <Type>
+    <Name>ArquebuseEmail</Name>
+    <Members>
+      <NoteProperty>
+        <Name>Date</Name>
+        <Value>Date</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>Status</Name>
+        <Value>Status</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>ID</Name>
+        <Value>ID</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>Client</Name>
+        <Value>Client</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>ClientPort</Name>
+        <Value>ClientPort</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>From</Name>
+        <Value>From</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>To</Name>
+        <Value>To</Value>
+      </NoteProperty>
+      <NoteProperty>
+        <Name>Subject</Name>
+        <Value>Subject</Value>
+      </NoteProperty>
+    </Members>
+  </Type>
+</Types>

@@ -205,6 +205,7 @@ Add-BuildTask Test {
 
         Write-Build White '      Performing Pester Unit Tests...'
         # Publish Test Results as NUnitXml
+        Import-module -Name Pester -RequiredVersion '4.9.0' -Force
         $testResults = Invoke-Pester @invokePesterParams
 
         # This will output a nice json for each failed test (if running in CodeBuild)
@@ -255,6 +256,7 @@ Add-BuildTask DevCC {
         CodeCoverage           = "$ModuleName\*\*.ps1"
         CodeCoverageOutputFile = '..\..\..\cov.xml'
     }
+    Import-module -Name Pester -RequiredVersion '4.9.0' -Force
     Invoke-Pester @invokePesterParams
     Write-Build Green '      ...Code Coverage report generated!'
 }#DevCC
@@ -412,6 +414,7 @@ Add-BuildTask InfraTest {
 
         Write-Build White "      Performing Pester Infrastructure Tests in $($invokePesterParams.path)"
         # Publish Test Results as NUnitXml
+        Import-module -Name Pester -RequiredVersion '4.9.0' -Force
         $testResults = Invoke-Pester @invokePesterParams
 
         # This will output a nice json for each failed test (if running in CodeBuild)

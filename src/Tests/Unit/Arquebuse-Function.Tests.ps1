@@ -64,12 +64,7 @@ InModuleScope 'Arquebuse' {
                 }
 
                 $result = Get-ArquebuseInbound @commandParameters
-                $result.Date.Year   | Should -Be 2020
-                $result.Date.Month  | Should -Be 8
-                $result.Date.Day    | Should -Be 10
-                $result.Date.Hour   | Should -Be 20
-                $result.Date.Minute | Should -Be 6
-                $result.Date.Second | Should -Be 0
+                $result.Date.ToUniversalTime().ToString("yyMMdd HH:mm:ss") | Should -Be '200810 18:06:00'
                 $result.ID          | Should -Be "1fuzRupHO5euYJCaKOFovsfY3Ck"
                 $result.Client      | Should -Be "127.0.0.1"
                 $result.ClientPort  | Should -Be 33472
@@ -113,12 +108,7 @@ InModuleScope 'Arquebuse' {
                 }
 
                 $result = Get-ArquebuseOutbound @commandParameters
-                $result.Date.Year   | Should -Be 2020
-                $result.Date.Month  | Should -Be 8
-                $result.Date.Day    | Should -Be 10
-                $result.Date.Hour   | Should -Be 20
-                $result.Date.Minute | Should -Be 6
-                $result.Date.Second | Should -Be 0
+                $result.Date.ToUniversalTime().ToString("yyMMdd HH:mm:ss") | Should -Be '200810 18:06:00'
                 $result.ID          | Should -Be "1fuzRupHO5euYJCaKOFovsfY3Ck"
                 $result.Client      | Should -Be "127.0.0.1"
                 $result.ClientPort  | Should -Be 33472

@@ -31,13 +31,44 @@ function InvokeApi {
         [bool]$SkipCertificateCheck = $false
     )
 
+    # As SkipCertificateCheck is not available in PowerShell version before 6
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+        # Save Certificate Policy
+        $certificatePolicy = [System.Net.ServicePointManager]::CertificatePolicy
+
+        if ($SkipCertificateCheck) {
+            if (-not("TrustAllCertsPolicy" -as [type])) {
+                Add-Type @"
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+public class TrustAllCertsPolicy : ICertificatePolicy {
+    public bool CheckValidationResult(
+        ServicePoint srvPoint, X509Certificate certificate,
+        WebRequest request, int certificateProblem) {
+        return true;
+    }
+}
+"@
+            }
+
+            # Replace Certificate Policy
+            [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+        }
+
+        $SkipCertificateCheckParameter = @{}
+    } else {
+        $SkipCertificateCheckParameter = @{
+            SkipCertificateCheck = $SkipCertificateCheck
+        }
+    }
+
     $uri = ($BaseUrl, 'api', $Version, $Object, $SubObject, $ID | Where-Object { $_ }) -join '/'
 
     $data    = $null
     $message = ''
     $success = $true
     try {
-        $data = Invoke-RestMethod -Uri $uri -Method $Method -Headers @{'X-API-Key' = $ApiKey} -SkipCertificateCheck:$SkipCertificateCheck
+        $data = Invoke-RestMethod -Uri $uri -Method $Method -Headers @{'X-API-Key' = $ApiKey} @SkipCertificateCheckParameter
     } catch {
         $success = $false
         $exception = $_.Exception
@@ -68,6 +99,11 @@ function InvokeApi {
                     $message += $exception.Message
                 }
             }
+        }
+    } finally {
+        # Restore previously saved Certificate Policy
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            [System.Net.ServicePointManager]::CertificatePolicy = $certificatePolicy
         }
     }
 

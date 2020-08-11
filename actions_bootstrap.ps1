@@ -11,17 +11,17 @@ $modulesToInstall = [System.Collections.ArrayList]::new()
 # https://github.com/pester/Pester
 $null = $modulesToInstall.Add(([PSCustomObject]@{
             ModuleName    = 'Pester'
-            ModuleVersion = '4.10.1'
+            ModuleVersion = '4.9.0'
         }))
 # https://github.com/nightroman/Invoke-Build
 $null = $modulesToInstall.Add(([PSCustomObject]@{
             ModuleName    = 'InvokeBuild'
-            ModuleVersion = '5.5.7'
+            ModuleVersion = '5.6.0'
         }))
 # https://github.com/PowerShell/PSScriptAnalyzer
 $null = $modulesToInstall.Add(([PSCustomObject]@{
             ModuleName    = 'PSScriptAnalyzer'
-            ModuleVersion = '1.18.3'
+            ModuleVersion = '1.19.0'
         }))
 # https://github.com/PowerShell/platyPS
 # older version used due to: https://github.com/PowerShell/platyPS/issues/457
@@ -41,7 +41,7 @@ foreach ($module in $modulesToInstall) {
     }
     try {
         Install-Module @installSplat
-        Import-Module -Name $module.ModuleName -ErrorAction Stop
+        Import-Module -Name $module.ModuleName -ErrorAction Stop -RequiredVersion $module.ModuleVersion
         '  - Successfully installed {0}' -f $module.ModuleName
     }
     catch {

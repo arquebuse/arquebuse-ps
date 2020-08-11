@@ -3,7 +3,7 @@
 # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners
 # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#using-a-specific-shell
 # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions
-name: ActionsTest-Windows-Build
+name: Windows-PS51-Build
 on: [push, pull_request]
 jobs:
   test:
@@ -14,14 +14,14 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Display the path
-      shell: pwsh
+      shell: powershell
       run: echo ${env:PATH}
     - name: Version Display
-      shell: pwsh
+      shell: powershell
       run: $PSVersionTable
     - name: Bootstrap
-      shell: pwsh
+      shell: powershell
       run: ./actions_bootstrap.ps1
     - name: Test and Build
-      shell: pwsh
+      shell: powershell
       run: Invoke-Build -File .\src\Arquebuse.build.ps1

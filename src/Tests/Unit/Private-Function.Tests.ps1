@@ -104,86 +104,89 @@ Describe 'Arquebuse Private Function Tests' -Tag Unit {
             $result.Data    | Should -Be 'test'
         }
 
-        Mock Invoke-RestMethod {
-            $httpResponseMessage = [System.Net.Http.HttpResponseMessage]::new(404)
-            throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("404 page not found", $httpResponseMessage)
-        }
+        # Mock errors only with PowerShell 6 and beyond
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            Mock Invoke-RestMethod {
+                $httpResponseMessage = [System.Net.Http.HttpResponseMessage]::new(404)
+                throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("404 page not found", $httpResponseMessage)
+            }
 
-        It 'Returns null when API returns a 404' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $true
-            $result.Message | Should -Be ''
-            $result.Data    | Should -Be $null
-        }
+            It 'Returns null when API returns a 404' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $true
+                $result.Message | Should -Be ''
+                $result.Data    | Should -Be $null
+            }
 
-        Mock Invoke-RestMethod {
-            $innerException = [System.SystemException]::new("The remote certificate is invalid according to the validation procedure.")
-            throw [System.Net.Http.HttpRequestException]::new("The SSL connection could not be established, see inner exception.", $innerException)
-        }
+            Mock Invoke-RestMethod {
+                $innerException = [System.SystemException]::new("The remote certificate is invalid according to the validation procedure.")
+                throw [System.Net.Http.HttpRequestException]::new("The SSL connection could not be established, see inner exception.", $innerException)
+            }
 
-        It 'Reports bad SSL certificates' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $false
-            $result.Message | Should -BeLike '*-SkipCertificateCheck*'
-            $result.Data    | Should -Be $null
-        }
+            It 'Reports bad SSL certificates' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $false
+                $result.Message | Should -BeLike '*-SkipCertificateCheck*'
+                $result.Data    | Should -Be $null
+            }
 
-        Mock Invoke-RestMethod {
-            $httpResponseMessage = [System.Net.Http.HttpResponseMessage]::new(401)
-            throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("Not Authorized", $httpResponseMessage)
-        }
+            Mock Invoke-RestMethod {
+                $httpResponseMessage = [System.Net.Http.HttpResponseMessage]::new(401)
+                throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("Not Authorized", $httpResponseMessage)
+            }
 
-        It 'Advices to check API-Key' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $false
-            $result.Message | Should -BeLike '*API-Key*'
-            $result.Data    | Should -Be $null
-        }
+            It 'Advices to check API-Key' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $false
+                $result.Message | Should -BeLike '*API-Key*'
+                $result.Data    | Should -Be $null
+            }
 
-        Mock Invoke-RestMethod {
-            $httpResponseMessage = [System.Net.Http.HttpResponseMessage]::new(500)
-            throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("Internal error", $httpResponseMessage)
-        }
+            Mock Invoke-RestMethod {
+                $httpResponseMessage = [System.Net.Http.HttpResponseMessage]::new(500)
+                throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("Internal error", $httpResponseMessage)
+            }
 
-        It 'Reports unknown status codes' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $false
-            $result.Message | Should -BeLike '*Status Code: 500*'
-            $result.Data    | Should -Be $null
-        }
+            It 'Reports unknown status codes' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $false
+                $result.Message | Should -BeLike '*Status Code: 500*'
+                $result.Data    | Should -Be $null
+            }
 
-        Mock Invoke-RestMethod {
-            throw "Find Me"
-        }
+            Mock Invoke-RestMethod {
+                throw "Find Me"
+            }
 
-        It 'Reports unknown exceptions' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $false
-            $result.Message | Should -BeLike '*Find Me*'
-            $result.Data    | Should -Be $null
-        }
+            It 'Reports unknown exceptions' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $false
+                $result.Message | Should -BeLike '*Find Me*'
+                $result.Data    | Should -Be $null
+            }
 
-        Mock Invoke-RestMethod {
-            throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("Find Me", $null)
-        }
+            Mock Invoke-RestMethod {
+                throw [Microsoft.PowerShell.Commands.HttpResponseException]::new("Find Me", $null)
+            }
 
-        It 'Reports unknown HTTP exceptions' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $false
-            $result.Message | Should -BeLike '*Find Me*'
-            $result.Data    | Should -Be $null
-        }
+            It 'Reports unknown HTTP exceptions' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $false
+                $result.Message | Should -BeLike '*Find Me*'
+                $result.Data    | Should -Be $null
+            }
 
-        Mock Invoke-RestMethod {
-            $innerException = [System.SystemException]::new("Find Me")
-            throw [System.Net.Http.HttpRequestException]::new("Unknown error", $innerException)
-        }
+            Mock Invoke-RestMethod {
+                $innerException = [System.SystemException]::new("Find Me")
+                throw [System.Net.Http.HttpRequestException]::new("Unknown error", $innerException)
+            }
 
-        It 'Reports unknown HTTP inner exceptions' {
-            $result = InvokeApi @ApiParameters
-            $result.Success | Should -Be $false
-            $result.Message | Should -BeLike '*Find Me*'
-            $result.Data    | Should -Be $null
+            It 'Reports unknown HTTP inner exceptions' {
+                $result = InvokeApi @ApiParameters
+                $result.Success | Should -Be $false
+                $result.Message | Should -BeLike '*Find Me*'
+                $result.Data    | Should -Be $null
+            }
         }
     }
 

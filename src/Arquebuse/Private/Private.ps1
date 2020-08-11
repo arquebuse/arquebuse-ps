@@ -203,17 +203,22 @@ function GetCommonApiParameters {
     $config = $null
     foreach ($path in $configPathCandidate) {
         if (Test-Path -Path $path -PathType Leaf -ErrorAction SilentlyContinue) {
-            $extension = Split-Path -Path $path -Extension
+            $extension = $path -replace '.*\.', ''
             switch ($extension) {
-                '.psd1' {
+                'psd1' {
                     try {
-                        $config = Import-PowerShellDataFile -Path $path | ConvertTo-Json -Depth 99 | ConvertFrom-Json
-                        Write-Verbose "Successfully loaded config file '$path'"
+                        $config = Import-PowerShellDataFile -Path $path -ErrorAction 'SilentlyContinue' -ErrorVariable ImportError | ConvertTo-Json -Depth 99 | ConvertFrom-Json
+                        if ($ImportError) {
+                            $config = $null
+                            Throw $ImportError
+                        } else {
+                            Write-Verbose "Successfully loaded config file '$path'"
+                        }
                     } catch {
                         Write-Warning "Failed to load config file '$path'. Message: $($_.Exception.Message)"
                     }
                 }
-                '.json' {
+                'json' {
                     try {
                         $config = Get-Content -Path $path -Raw | ConvertFrom-Json
                         Write-Verbose "Successfully loaded config file '$path'"

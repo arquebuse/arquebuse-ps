@@ -41,8 +41,9 @@ foreach ($module in $modulesToInstall) {
     }
     try {
         Install-Module @installSplat
-        Import-Module -Name $module.ModuleName -ErrorAction Stop -RequiredVersion $module.ModuleVersion
-        '  - Successfully installed {0}' -f $module.ModuleName
+        Import-Module -Name $module.ModuleName -ErrorAction Stop -RequiredVersion $module.ModuleVersion -Force
+
+        '  - Successfully installed {0} version {1}' -f $module.ModuleName, $(get-module -Name $module.ModuleName).Version.ToString()
     }
     catch {
         $message = 'Failed to install {0}' -f $module.ModuleName

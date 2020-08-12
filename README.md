@@ -4,6 +4,11 @@
 
 Arquebuse PowerShell Client
 
+The client is distributed as a PowerShell module and works for:
+
+* Windows PowerShell 5.1
+* Powershell 7 (tested on Windows, Linux and MacOS)
+
 For more information about [Arquebuse](https://arquebuse.io), an email infrastructure testing tool, please visit [Arquebuse website](https://arquebuse.io) or the [main project page](https://github.com/arquebuse/arquebuse).
 
 ## How to build

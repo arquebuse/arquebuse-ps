@@ -317,8 +317,6 @@ Describe 'Arquebuse Private Function Tests' -Tag Unit {
             $result.Date.Month  | Should -Be $(Get-Date).Month
             $result.Date.Day    | Should -Be $(Get-Date).Day
             $result.Date.Hour   | Should -Be $(Get-Date).Hour
-            $result.Date.Minute | Should -Be $(Get-Date).Minute
-            $result.Date.Second | Should -Be $(Get-Date).Second
             $result.ID          | Should -Be ""
             $result.Client      | Should -Be ""
             $result.ClientPort  | Should -Be 0

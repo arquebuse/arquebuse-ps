@@ -14,17 +14,15 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v1
+      with:
+         shell: ${{ matrix.shell }}
     - name: Display the path
-      shell: ${{ matrix.shell }}
       run: echo ${env:PATH}
     - name: Version Display
-      shell: ${{ matrix.shell }}
       run: $PSVersionTable
     - name: Bootstrap
-      shell: ${{ matrix.shell }}
       run: ./actions_bootstrap.ps1
     - name: Test
-      shell: ${{ matrix.shell }}
       run: Invoke-Build -File .\src\Arquebuse.build.ps1
   buid:
     name: Build package

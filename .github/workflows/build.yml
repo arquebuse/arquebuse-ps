@@ -14,8 +14,12 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v1
-      - name: Test
-        run: ${{ matrix.pscommand }} -Command "Invoke-Build -File .\src\Arquebuse.build.ps1"
+      - name: Bootstrap dependencies
+        run: ${{ matrix.pscommand }} -Command ".\src\Bootstrap.ps1"
+      - name: Validate syntax and formatting
+        run: ${{ matrix.pscommand }} -Command "Invoke-Build -File .\src\Arquebuse.build.ps1 Validate"
+      - name: Invoke unit tests
+        run: ${{ matrix.pscommand }} -Command "Invoke-Build -File .\src\Arquebuse.build.ps1 Test"
   buid:
     name: Build package
     needs: test

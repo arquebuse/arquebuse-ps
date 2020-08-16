@@ -28,6 +28,9 @@ Describe 'Arquebuse Private Function Tests' -Tag Unit {
     Context 'GetCommonApiParameters' {
         Mock GetHome {return 'nowhere'}
 
+        # Avoid warnings emitted by bad config file to be detected by Pester
+        Mock Write-Warning {}
+
         It 'Returns the default values' {
             $test = GetCommonApiParameters
             $test.BaseUrl | Should -Be 'https://localhost'
@@ -318,7 +321,7 @@ Describe 'Arquebuse Private Function Tests' -Tag Unit {
             $result.Date.Day    | Should -Be $(Get-Date).Day
             $result.Date.Hour   | Should -Be $(Get-Date).Hour
             $result.ID          | Should -Be ""
-            $result.Client      | Should -Be ""
+            $result.Client      | Should -Be "none"
             $result.ClientPort  | Should -Be 0
             $result.From        | Should -Be ""
             $result.To          | Should -Be ""

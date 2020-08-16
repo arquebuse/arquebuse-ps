@@ -1,37 +1,20 @@
 # Bootstrap dependencies
 
+# Avoid progress bar artefacts on reports
+$ProgressPreference = 'SilentlyContinue'
+
 # https://docs.microsoft.com/powershell/module/packagemanagement/get-packageprovider
 Get-PackageProvider -Name Nuget -ForceBootstrap | Out-Null
 
 # https://docs.microsoft.com/powershell/module/powershellget/set-psrepository
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 
-# List of PowerShell Modules required for the build
-$modulesToInstall = [System.Collections.ArrayList]::new()
-# https://github.com/pester/Pester
-$null = $modulesToInstall.Add(([PSCustomObject]@{
-            ModuleName    = 'Pester'
-            ModuleVersion = '4.9.0'
-        }))
-# https://github.com/nightroman/Invoke-Build
-$null = $modulesToInstall.Add(([PSCustomObject]@{
-            ModuleName    = 'InvokeBuild'
-            ModuleVersion = '5.6.0'
-        }))
-# https://github.com/PowerShell/PSScriptAnalyzer
-$null = $modulesToInstall.Add(([PSCustomObject]@{
-            ModuleName    = 'PSScriptAnalyzer'
-            ModuleVersion = '1.19.0'
-        }))
-# https://github.com/PowerShell/platyPS
-# older version used due to: https://github.com/PowerShell/platyPS/issues/457
-$null = $modulesToInstall.Add(([PSCustomObject]@{
-            ModuleName    = 'platyPS'
-            ModuleVersion = '0.12.0'
-        }))
+#Include: Settings
+$ModuleName = 'Arquebuse'
+. "./$ModuleName.Settings.ps1"
 
 'Installing PowerShell Modules'
-foreach ($module in $modulesToInstall) {
+foreach ($module in $requiredModules) {
     $installSplat = @{
         Name            = $module.ModuleName
         RequiredVersion = $module.ModuleVersion

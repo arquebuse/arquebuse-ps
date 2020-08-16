@@ -286,7 +286,7 @@ function ToEmailObject {
                 $clientPort = 0
             }
         } else {
-            $client     = ""
+            $client     = "none"
             $clientPort = 0
         }
 

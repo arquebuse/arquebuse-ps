@@ -2,28 +2,20 @@ name: Test, build and publish
 on: [push, pull_request]
 jobs:
   test:
-    name: Run Tests on different OS
+    name: Run Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        shell: [pwsh]
         os: [ubuntu-latest, macos-latest, windows-latest]
+        pscommand: [pwsh]
         include:
-          - shell: powershell
-            os: windows-latest
+          - os: windows-latest
+            pscommand: powershell
       fail-fast: false
     steps:
-    - uses: actions/checkout@v1
-      with:
-         shell: ${{ matrix.shell }}
-    - name: Display the path
-      run: echo ${env:PATH}
-    - name: Version Display
-      run: $PSVersionTable
-    - name: Bootstrap
-      run: ./actions_bootstrap.ps1
-    - name: Test
-      run: Invoke-Build -File .\src\Arquebuse.build.ps1
+      - uses: actions/checkout@v1
+      - name: Test
+        run: ${{ matrix.pscommand }} -Command "Invoke-Build -File .\src\Arquebuse.build.ps1"
   buid:
     name: Build package
     needs: test
@@ -34,7 +26,7 @@ jobs:
         shell: pwsh
         run: $PSVersionTable
   publish:
-    name: Build package
+    name: Publish package
     needs: test
     runs-on: ubuntu-latest
     steps:

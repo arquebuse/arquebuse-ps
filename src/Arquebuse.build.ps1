@@ -212,7 +212,6 @@ Add-BuildTask Pester {
 
         Write-Build White 'Performing Pester Unit Tests...'
         # Publish Test Results as NUnitXml
-        Import-module -Name Pester -RequiredVersion '4.9.0' -Force
         $testResults = Invoke-Pester @invokePesterParams
 
         # This will output a nice json for each failed test (if running in CodeBuild)
@@ -262,22 +261,12 @@ Add-BuildTask DevCC {
         CodeCoverage           = "$moduleName\*\*.ps1"
         CodeCoverageOutputFile = '..\..\..\cov.xml'
     }
-    Import-module -Name Pester -RequiredVersion '4.9.0' -Force
     Invoke-Pester @invokePesterParams
     Write-Build Green 'Code Coverage report generated!'
 }#DevCC
 
-# Synopsis: Build help for module
-Add-BuildTask CreateHelpStart {
-    Write-Build White 'Performing all help related actions.'
-
-    Write-Build Gray '     Importing platyPS v0.12.0 ...'
-    Import-Module platyPS -RequiredVersion 0.12.0 -ErrorAction Stop
-    Write-Build Gray '     platyPS imported successfully.'
-}#CreateHelpStart
-
 # Synopsis: Build markdown help files for module and fail if help information is missing
-Add-BuildTask CreateMarkdownHelp -After CreateHelpStart {
+Add-BuildTask CreateMarkdownHelp {
     $ModulePage = "$($script:ArtifactsPath)\docs\$($moduleName).md"
 
     $markdownParams = @{
@@ -420,7 +409,6 @@ Add-BuildTask InfraTest {
 
         Write-Build White "      Performing Pester Infrastructure Tests in $($invokePesterParams.path)"
         # Publish Test Results as NUnitXml
-        Import-module -Name Pester -RequiredVersion '4.9.0' -Force
         $testResults = Invoke-Pester @invokePesterParams
 
         # This will output a nice json for each failed test (if running in CodeBuild)

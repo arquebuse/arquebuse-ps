@@ -28,8 +28,9 @@
 #>
 
 #Include: Settings
-$ModuleName = 'Arquebuse'
-. "./$ModuleName.Settings.ps1"
+$moduleName = 'Arquebuse'
+$moduleSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath "$moduleName.Settings.ps1"
+. $moduleSettingsPath
 
 # Load prerequisite modules
 foreach ($module in $requiredModules) {
@@ -202,9 +203,9 @@ Add-BuildTask Pester {
             PassThru               = $true
             Verbose                = $false
             EnableExit             = $false
-            CodeCoverage           = "$ModuleName\*\*.ps1"
+            CodeCoverage           = "$moduleName\*\*.ps1"
             CodeCoverageOutputFile = "$codeCovPath\CodeCoverage.xml"
-            # CodeCoverage                 = "$ModuleName\*\*.ps1"
+            # CodeCoverage                 = "$moduleName\*\*.ps1"
             # CodeCoverageOutputFile       = "$codeCovPath\codecoverage.xml"
             # CodeCoverageOutputFileFormat = 'JaCoCo'
         }
@@ -258,7 +259,7 @@ Add-BuildTask DevCC {
     Write-Build White 'Generating code coverage report at root...'
     $invokePesterParams = @{
         Path                   = 'Tests\Unit'
-        CodeCoverage           = "$ModuleName\*\*.ps1"
+        CodeCoverage           = "$moduleName\*\*.ps1"
         CodeCoverageOutputFile = '..\..\..\cov.xml'
     }
     Import-module -Name Pester -RequiredVersion '4.9.0' -Force
@@ -277,10 +278,10 @@ Add-BuildTask CreateHelpStart {
 
 # Synopsis: Build markdown help files for module and fail if help information is missing
 Add-BuildTask CreateMarkdownHelp -After CreateHelpStart {
-    $ModulePage = "$($script:ArtifactsPath)\docs\$($ModuleName).md"
+    $ModulePage = "$($script:ArtifactsPath)\docs\$($moduleName).md"
 
     $markdownParams = @{
-        Module         = $ModuleName
+        Module         = $moduleName
         OutputFolder   = "$($script:ArtifactsPath)\docs\"
         Force          = $true
         WithModulePage = $true
@@ -346,7 +347,7 @@ Add-BuildTask CreateHelpComplete -After CreateExternalHelp {
 Add-BuildTask UpdateCBH -After AssetCopy {
     $ExternalHelp = @"
 <#
-.EXTERNALHELP $($ModuleName)-help.xml
+.EXTERNALHELP $($moduleName)-help.xml
 #>
 "@
 

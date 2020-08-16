@@ -3,6 +3,9 @@
 # Avoid progress bar artefacts on reports
 $ProgressPreference = 'SilentlyContinue'
 
+# Fail on error
+$ErrorActionPreference = 'Stop'
+
 # https://docs.microsoft.com/powershell/module/packagemanagement/get-packageprovider
 Get-PackageProvider -Name Nuget -ForceBootstrap | Out-Null
 
@@ -10,8 +13,9 @@ Get-PackageProvider -Name Nuget -ForceBootstrap | Out-Null
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 
 #Include: Settings
-$ModuleName = 'Arquebuse'
-. "./$ModuleName.Settings.ps1"
+$moduleName = 'Arquebuse'
+$moduleSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath "$moduleName.Settings.ps1"
+. $moduleSettingsPath
 
 'Installing PowerShell Modules'
 foreach ($module in $requiredModules) {
@@ -24,7 +28,7 @@ foreach ($module in $requiredModules) {
     }
     try {
         Install-Module @installSplat
-        Import-Module -Name $module.ModuleName -ErrorAction Stop -RequiredVersion $module.ModuleVersion -Force
+        Import-Module -Name $module.ModuleName -RequiredVersion $module.ModuleVersion -Force
 
         '  - Successfully installed {0} version {1}' -f $module.ModuleName, $(get-module -Name $module.ModuleName).Version.ToString()
     }

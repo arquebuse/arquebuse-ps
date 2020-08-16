@@ -27,6 +27,8 @@
     https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-Guidelines
 #>
 
+$ErrorActionPreference = 'Stop'
+
 #Include: Settings
 $moduleName = 'Arquebuse'
 $moduleSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath "$moduleName.Settings.ps1"
@@ -34,12 +36,13 @@ $moduleSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath "$moduleName.Sett
 
 # Load prerequisite modules
 foreach ($module in $requiredModules) {
-    Import-Module -Name $module.ModuleName -ErrorAction Stop -RequiredVersion $module.ModuleVersion -Force
+    Import-Module -Name $module.ModuleName -RequiredVersion $module.ModuleVersion -Force
 }
 
 #Default Build
 $str = @()
 $str = 'Clean', 'ValidateRequirements'
+$str += 'CheckManifestVersion'
 $str += 'FormattingCheck'
 $str += 'Analyze', 'Pester'
 $str += 'CreateHelpStart'
@@ -47,7 +50,7 @@ $str += 'Build', 'Archive'
 Add-BuildTask -Name . -Jobs $str
 
 #Syntax and formatting checks
-Add-BuildTask Validate FormattingCheck, Analyze
+Add-BuildTask Validate CheckManifestVersion, FormattingCheck, Analyze
 
 #Local testing build process
 Add-BuildTask TestLocal Clean, FormattingCheck, Analyze, Pester
@@ -61,9 +64,11 @@ Enter-Build {
 
     # Identify other required paths
     $script:ModuleSourcePath = Join-Path -Path $BuildRoot -ChildPath $script:ModuleName
+    $script:RootPath = Split-Path -Path $BuildRoot -Parent
     $script:ModuleFiles = Join-Path -Path $script:ModuleSourcePath -ChildPath '*'
-
     $script:ModuleManifestFile = Join-Path -Path $script:ModuleSourcePath -ChildPath "$($script:ModuleName).psd1"
+    $script:ModuleChangelogFile = Join-Path -Path $script:RootPath -ChildPath 'CHANGELOG.md'
+    $script:ModuleDocsPath = Join-Path -Path $script:RootPath -ChildPath 'docs'
 
     $manifestInfo = Import-PowerShellDataFile -Path $script:ModuleManifestFile
     $script:ModuleVersion = $manifestInfo.ModuleVersion
@@ -91,7 +96,7 @@ Set-BuildHeader {
     # task location in a script
     Write-Build DarkGray "At $($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
     Write-Build Yellow "Manifest File: $script:ModuleManifestFile"
-    Write-Build Yellow "Manifest Version: $($manifestInfo.ModuleVersion)"
+    Write-Build Yellow "Manifest Version: $($script:ModuleVersion)"
 }#Set-BuildHeader
 
 # Define footers similar to default but change the color to DarkGray.
@@ -121,6 +126,32 @@ Add-BuildTask ValidateRequirements {
     Assert-Build ($PSVersionTable.PSVersion.Major.ToString() -ge '5') 'At least Powershell 5 is required for this build to function properly'
     Write-Build Green 'Verification Complete!'
 }#ValidateRequirements
+
+#Synopsis: Check if the last version in the changelog is the same as in the manifest
+Add-BuildTask CheckManifestVersion {
+    Write-Build White 'Verifying module manifest version...'
+    # Get latest version in Changelog
+    $changelog = Get-Content -Path $script:ModuleChangelogFile -Raw
+    Assert-Build ($changelog -match '\[(?<Version>[0-9]+\.[0-9]+\.[0-9]+)\]') 'Cannot get latest version from changelog'
+    $changelogVersion = $Matches['Version']
+
+    Assert-Build ($script:ModuleVersion -eq $changelogVersion) 'Module version in the manifest is not the same as in the changelog. Please run Invoke-Build UpdateManifest.'
+    Write-Build Green 'Module manifest version is up to date'
+}#CheckManifestVersion
+
+#Synopsis: Update module version in the manifest
+Add-BuildTask UpdateManifest {
+    Write-Build White 'Updating module manifest version...'
+    # Get latest version in Changelog
+    $changelog = Get-Content -Path $script:ModuleChangelogFile -Raw
+    Assert-Build ($changelog -match '\[(?<Version>[0-9]+\.[0-9]+\.[0-9]+)\]') 'Cannot get latest version from changelog'
+    $changelogVersion = $Matches['Version']
+
+    $manifestContent = Get-Content -Path $script:ModuleManifestFile -Raw
+    $manifestContent = $manifestContent -replace "ModuleVersion = '[^']+'", "ModuleVersion = '$changelogVersion'"
+    $manifestContent | Set-Content -Path $script:ModuleManifestFile -Force -NoNewline -Encoding 'utf8BOM'
+    Write-Build Green 'Module manifest version successfully updated'
+}
 
 #Synopsis: Invokes PSScriptAnalyzer against the Module source path
 Add-BuildTask Analyze {
@@ -265,8 +296,13 @@ Add-BuildTask DevCC {
     Write-Build Green 'Code Coverage report generated!'
 }#DevCC
 
+# Synopsis: Build help for module
+Add-BuildTask CreateHelpStart {
+    Write-Build White 'Performing all help related actions.'
+}#CreateHelpStart
+
 # Synopsis: Build markdown help files for module and fail if help information is missing
-Add-BuildTask CreateMarkdownHelp {
+Add-BuildTask CreateMarkdownHelp -After CreateHelpStart {
     $ModulePage = "$($script:ArtifactsPath)\docs\$($moduleName).md"
 
     $markdownParams = @{
@@ -352,7 +388,7 @@ Add-BuildTask UpdateCBH -After AssetCopy {
 # Synopsis: Copies module assets to Artifacts folder
 Add-BuildTask AssetCopy -Before Build {
     Write-Build Gray '  Copying assets to Artifacts...'
-    Copy-Item -Path "$script:ModuleSourcePath\*" -Destination $script:ArtifactsPath -Exclude *.psd1, *.psm1 -Recurse -ErrorAction Stop
+    Copy-Item -Path "$script:ModuleSourcePath\*" -Destination $script:ArtifactsPath -Exclude *.psd1, *.psm1 -Recurse
     Write-Build Gray '  Assets copy complete.'
 }#AssetCopy
 
@@ -361,8 +397,7 @@ Add-BuildTask Build {
     Write-Build White 'Performing Module Build'
 
     Write-Build Gray '  Copying manifest file to Artifacts...'
-    Copy-Item -Path $script:ModuleManifestFile -Destination $script:ArtifactsPath -Recurse -ErrorAction Stop
-    #Copy-Item -Path $script:ModuleSourcePath\bin -Destination $script:ArtifactsPath -Recurse -ErrorAction Stop
+    Copy-Item -Path $script:ModuleManifestFile -Destination $script:ArtifactsPath -Recurse
     Write-Build Gray '  manifest copy complete.'
 
     Write-Build Gray '  Merging Public and Private functions to one module file...'
@@ -381,16 +416,16 @@ Add-BuildTask Build {
     Write-Build Gray '  Cleaning up leftover artifacts...'
     #cleanup artifacts that are no longer required
     if (Test-Path "$($script:ArtifactsPath)\Public") {
-        Remove-Item "$($script:ArtifactsPath)\Public" -Recurse -Force -ErrorAction Stop
+        Remove-Item "$($script:ArtifactsPath)\Public" -Recurse -Force
     }
     if (Test-Path "$($script:ArtifactsPath)\Private") {
-        Remove-Item "$($script:ArtifactsPath)\Private" -Recurse -Force -ErrorAction Stop
+        Remove-Item "$($script:ArtifactsPath)\Private" -Recurse -Force
     }
-    # here you could move your docs up to your repos doc level if you wanted
-    # Write-Build Gray '  Overwriting docs output...'
-    # Move-Item "$($script:ArtifactsPath)\docs\*.md" -Destination "..\docs\" -Force
-    # Remove-Item "$($script:ArtifactsPath)\docs" -Recurse -Force -ErrorAction Stop
-    # Write-Build Gray '  Docs output completed.'
+
+    Write-Build Gray '  Overwriting docs output...'
+    Remove-Item "$($script:ModuleDocsPath)\*.md" -Recurse -Force
+    Copy-Item "$($script:ArtifactsPath)\docs\*.md" -Destination $script:ModuleDocsPath -Force
+    Write-Build Gray '  Docs output completed.'
 
     Write-Build Green 'Build Complete!'
 }#Build

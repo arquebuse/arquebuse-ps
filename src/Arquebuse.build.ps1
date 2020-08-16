@@ -425,6 +425,7 @@ Add-BuildTask Build {
     Write-Build Gray '  Overwriting docs output...'
     Remove-Item "$($script:ModuleDocsPath)\*.md" -Recurse -Force
     Copy-Item "$($script:ArtifactsPath)\docs\*.md" -Destination $script:ModuleDocsPath -Force
+    Move-Item -Path "$($script:ModuleDocsPath)\$($script:ModuleName).md" -Destination "$($script:ModuleDocsPath)\Readme.md"
     Write-Build Gray '  Docs output completed.'
 
     Write-Build Green 'Build Complete!'
